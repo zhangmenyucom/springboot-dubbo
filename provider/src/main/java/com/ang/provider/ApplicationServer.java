@@ -9,10 +9,8 @@ import org.springframework.context.annotation.ImportResource;
 public class ApplicationServer {
 
 	public static void main(String... args) {
-		
 		System.out.println("服务启动中");
 		SpringApplication.run(ApplicationServer.class, args);
 		System.out.println("服务启动完成");
-	
 	}
 }

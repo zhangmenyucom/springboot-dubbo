@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/consume/consume.iml" filepath="$PROJECT_DIR$/consume/consume.iml" />
       <module fileurl="file://$PROJECT_DIR$/provider/provider.iml" filepath="$PROJECT_DIR$/provider/provider.iml" />
-      <module fileurl="file://$PROJECT_DIR$/springbootdubbo.iml" filepath="$PROJECT_DIR$/springbootdubbo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/springboot-dubbo.iml" filepath="$PROJECT_DIR$/springboot-dubbo.iml" />
     </modules>
   </component>
 </project>
