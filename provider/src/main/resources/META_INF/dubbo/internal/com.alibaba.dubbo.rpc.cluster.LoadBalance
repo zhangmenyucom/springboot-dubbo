@@ -1,0 +1,1 @@
+mybalance=com.alibaba.dubbo.rpc.cluster.loadbalance.AppointLoadBalance

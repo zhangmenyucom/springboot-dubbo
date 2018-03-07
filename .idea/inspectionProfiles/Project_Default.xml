@@ -35,7 +35,7 @@
     </inspection_tool>
     <inspection_tool class="Annotator" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="Anonymous2MethodRef" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="AnonymousClassComplexity" enabled="true" level="ERROR" enabled_by_default="true">
+    <inspection_tool class="AnonymousClassComplexity" enabled="false" level="ERROR" enabled_by_default="false">
       <option name="m_limit" value="3" />
     </inspection_tool>
     <inspection_tool class="AnonymousClassMethodCount" enabled="true" level="WARNING" enabled_by_default="false">
@@ -1295,7 +1295,7 @@
     <inspection_tool class="MavenModelInspection" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="MavenRedundantGroupId" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="MethodCallInLoopCondition" enabled="false" level="ERROR" enabled_by_default="false" />
-    <inspection_tool class="MethodCanBeVariableArityMethod" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MethodCanBeVariableArityMethod" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="MethodCount" enabled="false" level="ERROR" enabled_by_default="false">
       <option name="m_limit" value="20" />
       <option name="ignoreGettersAndSetters" value="false" />
@@ -1609,7 +1609,7 @@
     <inspection_tool class="PatternValidation" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="CHECK_NON_CONSTANT_VALUES" value="true" />
     </inspection_tool>
-    <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="PlatformDetectionJS" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="PlayCustomTagNameInspection" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="PlayPropertyInspection" enabled="true" level="ERROR" enabled_by_default="true" />
@@ -2000,7 +2000,7 @@
     </inspection_tool>
     <inspection_tool class="SwitchStatementWithConfusingDeclaration" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="SwitchStatementWithNoDefaultBranchJS" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="SwitchStatementWithTooFewBranches" enabled="true" level="ERROR" enabled_by_default="true">
+    <inspection_tool class="SwitchStatementWithTooFewBranches" enabled="false" level="ERROR" enabled_by_default="false">
       <option name="m_limit" value="2" />
     </inspection_tool>
     <inspection_tool class="SwitchStatementWithTooManyBranches" enabled="false" level="ERROR" enabled_by_default="false">
@@ -2220,7 +2220,7 @@
     <inspection_tool class="UnresolvedMessageChannel" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="UnresolvedPropertyKey" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="UnresolvedReference" enabled="true" level="WARNING" enabled_by_default="true" />
-    <inspection_tool class="UnsecureRandomNumberGeneration" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UnsecureRandomNumberGeneration" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="UnterminatedStatementJS" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="ignoreSemicolonAtEndOfBlock" value="true" />
     </inspection_tool>
@@ -2274,7 +2274,9 @@
     <inspection_tool class="UtilityClassWithPublicConstructor" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="UtilityClassWithoutPrivateConstructor" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignorableAnnotations">
-        <value />
+        <value>
+          <item value="org.springframework.boot.autoconfigure.SpringBootApplication" />
+        </value>
       </option>
       <option name="ignoreClassesWithOnlyMain" value="false" />
     </inspection_tool>

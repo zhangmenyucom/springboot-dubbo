@@ -2,6 +2,9 @@ package com.ang.provider.service;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * @author taylor
+ */
 @Service
 public class IndexServiceImpl implements IndexService {
 
