@@ -10,37 +10,38 @@ import java.util.Random;
 
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
+
 /**
  * @author xiaolu.zhang
- * @desc:
+ * @desc:触发器发送消息
  * @date: 2018/3/6 17:21
  */
 @Data
 @Slf4j
 public class MessageUpdator implements Watcher {
+
     private ZooKeeper zk;
-    private String hostport;
-    private static String NOTE_NAME = "greyNode";
 
-    MessageUpdator(String hostport) {
-        this.hostport = hostport;
-    }
+    private String zkServerList;
 
-    public void startZk() {
+    private String nodeName = "greyNode";
+
+    MessageUpdator(String zkServerList, String noteName) {
         try {
-            /**创建zk实例**/
-            zk = new ZooKeeper(hostport, 1500, this);
+            this.nodeName = noteName;
+            this.zkServerList = zkServerList;
+            zk = new ZooKeeper(zkServerList, 60000, this);
         } catch (IOException e) {
-            log.info("zookeeperClient start failed");
             e.printStackTrace();
         }
     }
+
 
     /**
      * 创建标识结点
      **/
     private void checkNoteAndSendMessage() {
-        zk.create("/" + NOTE_NAME, "-1".getBytes(), OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL, nodeCreateCallBack, null);
+        zk.create("/" + nodeName, "-1".getBytes(), OPEN_ACL_UNSAFE, CreateMode.PERSISTENT, nodeCreateCallBack, null);
     }
 
 
@@ -57,11 +58,11 @@ public class MessageUpdator implements Watcher {
                     break;
                 /**结点已存在**/
                 case NODEEXISTS:
-                    getUpdateZNodeData();
+                    getAndUpdateZNodeData();
                     break;
                 /**创建成功**/
                 case OK:
-                    getUpdateZNodeData();
+                    getAndUpdateZNodeData();
                     break;
                 default:
                     log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
@@ -73,15 +74,16 @@ public class MessageUpdator implements Watcher {
     /**
      * 获取节点数据
      **/
-    private void getUpdateZNodeData() {
-        zk.getData("/" + NOTE_NAME, this, dataCheckCallBack, null);
+    public void getAndUpdateZNodeData() {
+        zk.getData("/" + nodeName, this, dataCheckCallBack, null);
     }
 
     /**
      * 更新节点数据
      **/
     private void sendUpdateMassage(Stat stat) {
-        zk.setData("/" + NOTE_NAME, Integer.toString(new Random().nextInt(100)).getBytes(), stat.getVersion(), updateCallBack, null);
+        log.info("正在发送更新请求");
+        zk.setData("/" + nodeName, Integer.toString(new Random().nextInt(100)).getBytes(), stat.getVersion(), updateCallBack, null);
     }
 
     /**
@@ -93,7 +95,7 @@ public class MessageUpdator implements Watcher {
             switch (KeeperException.Code.get(rc)) {
                 /**链接丢失重新获取**/
                 case CONNECTIONLOSS:
-                    getUpdateZNodeData();
+                    getAndUpdateZNodeData();
                     break;
                 /**节点被删除重新创建节点**/
                 case NONODE:
@@ -102,6 +104,10 @@ public class MessageUpdator implements Watcher {
                 /**获取节点成功后,更新数据**/
                 case OK:
                     sendUpdateMassage(stat);
+                    break;
+                /**超时重试**/
+                case SESSIONEXPIRED:
+                    getAndUpdateZNodeData();
                     break;
                 default:
                     log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
@@ -119,7 +125,7 @@ public class MessageUpdator implements Watcher {
             switch (KeeperException.Code.get(rc)) {
                 /**链接丢失重新获取并发送数据**/
                 case CONNECTIONLOSS:
-                    getUpdateZNodeData();
+                    getAndUpdateZNodeData();
                     break;
                 /**节点被删除重新创建节点**/
                 case NONODE:
@@ -127,7 +133,11 @@ public class MessageUpdator implements Watcher {
                     break;
                 /**获取更新成功后,输入日志**/
                 case OK:
-                    log.info("send update cache message success");
+                    log.info("发送更新请求成功");
+                    break;
+                case BADVERSION:
+                    log.info("已被其他进程更新,正在重试");
+                    getAndUpdateZNodeData();
                     break;
                 default:
                     log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
@@ -136,19 +146,30 @@ public class MessageUpdator implements Watcher {
         }
     };
 
-    public static void main(String[] args) throws InterruptedException {
-        MessageUpdator messageUpdator = new MessageUpdator("111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183");
-        messageUpdator.startZk();
-        for (int i = 0; i < 10; i++) {
-            messageUpdator.checkNoteAndSendMessage();
-            Thread.sleep(2000);
-        }
-        Thread.sleep(100000);
-
-    }
-
+    /**
+     * 监控变化后的处理
+     **/
     @Override
     public void process(WatchedEvent watchedEvent) {
-        System.out.println(watchedEvent);
+        String path = watchedEvent.getPath();
+        switch (watchedEvent.getType().getIntValue()) {
+            case -1:
+                log.info("");
+                break;
+            case 1:
+                log.info("{} NodeCreated", path);
+                break;
+            case 2:
+                log.info("{} NodeDeleted", path);
+                break;
+            case 3:
+                log.info("{} NodeDataChanged", path);
+                break;
+            case 4:
+                log.info("{} NodeChildrenChanged", path);
+                break;
+            default:
+                break;
+        }
     }
 }

@@ -56,11 +56,6 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.21</version>
         </dependency>
-        <dependency>
-            <groupId>com.weimob.o2o.router</groupId>
-            <artifactId>o2o-router-dubbo</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
     <build>
         <plugins>

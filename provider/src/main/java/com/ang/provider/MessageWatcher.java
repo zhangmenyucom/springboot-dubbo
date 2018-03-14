@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 
+
 /**
  * @author xiaolu.zhang
  * @desc:
@@ -17,10 +18,34 @@ import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
 @Data
 @Slf4j
 public class MessageWatcher implements Watcher {
-    private ZooKeeper zk;
-    private String hostport;
 
-    private static String NOTE_NAME = "greyNode";
+    private ZooKeeper zk;
+
+    private String zkServerList;
+
+    private String nodeName = "greyNode";
+
+
+    /**
+     * 创建监听对象并创建zk实例
+     **/
+    MessageWatcher(String zkServerList, String noteName) {
+        try {
+            this.nodeName = noteName;
+            this.zkServerList = zkServerList;
+            zk = new ZooKeeper(zkServerList, 60000, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 系统启动后直接拉取最新数据并监控
+     **/
+    public void init() {
+        log.info("系统启动后第一次拉取最新数据");
+        watchNode();
+    }
 
     /**
      * 消息处理函数
@@ -28,34 +53,20 @@ public class MessageWatcher implements Watcher {
     @Override
     public void process(WatchedEvent watchedEvent) {
         if (watchedEvent.getType() == Event.EventType.NodeDataChanged) {
-            System.out.println("监控到有更新，开始更新缓存数据");
+            log.info("收到更新通知，开始更新缓存");
+            log.info("更新缓存成功");
             /**zk机制一次出发，所以再次监听**/
             watchNode();
         }
 
     }
 
-    MessageWatcher(String hostport) {
-        this.hostport = hostport;
-    }
-
-    public void startZk() {
-        try {
-            /**创建zk实例**/
-            zk = new ZooKeeper(hostport, 1500, this);
-            /**创建结点并监控**/
-            checkNoteAndWatchNode();
-        } catch (IOException e) {
-            log.info("zookeeperClient start failed");
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 获取数据并监控节点
      **/
     private void watchNode() {
-        zk.getData("/" + NOTE_NAME, this, dataCheckCallBack, null);
+        zk.getData("/" + nodeName, this, dataCheckCallBack, null);
     }
 
 
@@ -68,11 +79,19 @@ public class MessageWatcher implements Watcher {
             switch (KeeperException.Code.get(rc)) {
                 /**链接丢失重新监听**/
                 case CONNECTIONLOSS:
+                    System.out.println("链接丢失重新监听");
                     watchNode();
                     return;
                 /**节点被删除重新创建节点**/
                 case NONODE:
+                    System.out.println("节点被删除重新创建节点");
                     checkNoteAndWatchNode();
+                    break;
+                case OK:
+                    log.info("正在监听 node {}", nodeName);
+                    break;
+                default:
+                    log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
                     break;
             }
         }
@@ -83,7 +102,7 @@ public class MessageWatcher implements Watcher {
      * 创建标识结点
      **/
     private void checkNoteAndWatchNode() {
-        zk.create("/" + NOTE_NAME, "-1".getBytes(), OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL, nodeCreateCallBack, null);
+        zk.create("/" + nodeName, "-1".getBytes(), OPEN_ACL_UNSAFE, CreateMode.PERSISTENT, nodeCreateCallBack, null);
     }
 
 
@@ -107,14 +126,9 @@ public class MessageWatcher implements Watcher {
                     watchNode();
                     break;
                 default:
+                    log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
+                    break;
             }
         }
     };
-
-    public static void main(String[] args) throws InterruptedException {
-        MessageWatcher messageWatcher = new MessageWatcher("111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183");
-        messageWatcher.startZk();
-        Thread.sleep(600000);
-
-    }
 }

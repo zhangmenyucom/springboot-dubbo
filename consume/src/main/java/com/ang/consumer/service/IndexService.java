@@ -1,4 +1,4 @@
-package com.ang.provider.service;
+package com.ang.consumer.service;
 
 /**
  * @author taylor

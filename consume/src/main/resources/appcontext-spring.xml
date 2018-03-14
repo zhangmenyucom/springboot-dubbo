@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans.xsd
             http://code.alibabatech.com/schema/dubbo
             http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
-	<!-- 提供方应用信息，用于计算依赖关系 -->
-	<dubbo:application name="ang-consumer" />
-	<!-- 使用zookeeper注册中心暴露服务地址 -->
-	<dubbo:registry protocol="zookeeper" address="111.231.140.42:2181" />
-	
-	<dubbo:reference id="dubboService" interface="com.ang.provider.service.IndexService" /> 
+    <!-- 提供方应用信息，用于计算依赖关系 -->
+    <dubbo:application name="ang-consumer"/>
 
+    <dubbo:consumer loadbalance="mybalance" cluster="failover" retries="3"/>
+
+    <!-- 使用zookeeper注册中心暴露服务地址 -->
+    <dubbo:registry protocol="zookeeper" address="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+
+    <dubbo:reference id="dubboService" interface="com.ang.consumer.service.IndexService"/>
 </beans>

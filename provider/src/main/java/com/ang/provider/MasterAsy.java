@@ -87,7 +87,7 @@ public class MasterAsy implements Watcher {
     public void startZK() throws IOException, KeeperException, InterruptedException {
         zooKeeper = new ZooKeeper(hostPort, 15000, this);
         bootstrap();
-        zooKeeper.getChildren("/dubbo",true);
+        zooKeeper.getChildren("/META-INF/dubbo",true);
     }
 
     public void stopZK() throws InterruptedException {
@@ -100,7 +100,7 @@ public class MasterAsy implements Watcher {
         System.out.println(watchedEvent+"++++++++++++++++++++++");
         List<String> children = null;
         try {
-            children = zooKeeper.getChildren("/dubbo", true);
+            children = zooKeeper.getChildren("/META-INF/dubbo", true);
         } catch (KeeperException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -119,7 +119,7 @@ public class MasterAsy implements Watcher {
         } else {
             System.out.println("some one else is the leader");
         }
-        List<String> children = m.getZooKeeper().getChildren("/dubbo", true);
+        List<String> children = m.getZooKeeper().getChildren("/META-INF/dubbo", true);
         System.out.println(children.toString());
         Thread.sleep(600000);
         m.stopZK();
@@ -131,7 +131,7 @@ public class MasterAsy implements Watcher {
         createParent("/tasks", new byte[0]);
         createParent("/status", new byte[0]);
         createParent("/master", new byte[0]);
-        createParent("/dubbo", new byte[0]);
+        createParent("/META-INF/dubbo", new byte[0]);
     }
 
     public void createParent(String path, byte[] data) {
