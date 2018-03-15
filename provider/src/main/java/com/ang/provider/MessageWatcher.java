@@ -81,7 +81,7 @@ public class MessageWatcher implements Watcher {
                 case CONNECTIONLOSS:
                     System.out.println("链接丢失重新监听");
                     watchNode();
-                    return;
+                    break;
                 /**节点被删除重新创建节点**/
                 case NONODE:
                     System.out.println("节点被删除重新创建节点");
