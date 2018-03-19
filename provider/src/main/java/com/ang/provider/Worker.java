@@ -73,9 +73,22 @@ public class Worker implements Watcher {
      * 监察主节点分配任务
      **/
     private void watchAssign() {
-        zooKeeper.exists("/assign", this, watchAssignCallBack, null);
+        zooKeeper.exists("/assign", assgignWather, watchAssignCallBack, null);
     }
 
+    private Watcher assgignWather=new Watcher() {
+        @Override
+        public void process(WatchedEvent watchedEvent) {
+          if(watchedEvent.getType()== Event.EventType.NodeChildrenChanged){
+              getWork();
+          }
+        }
+    };
+
+    public void getWork(){
+
+
+    }
     private AsyncCallback.StatCallback watchAssignCallBack = new AsyncCallback.StatCallback() {
         @Override
         public void processResult(int rc, String path, Object ctx, Stat stat) {
