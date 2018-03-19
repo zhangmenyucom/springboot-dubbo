@@ -131,7 +131,6 @@ public class MasterAsy implements Watcher {
         createParent("/tasks", new byte[0]);
         createParent("/status", new byte[0]);
         createParent("/master", new byte[0]);
-        createParent("/META-INF/dubbo", new byte[0]);
     }
 
     public void createParent(String path, byte[] data) {
