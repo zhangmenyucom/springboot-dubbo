@@ -73,25 +73,58 @@ public class Worker implements Watcher {
      * 监察主节点分配任务
      **/
     private void watchAssign() {
-        zooKeeper.exists("/assign", assgignWather, watchAssignCallBack, null);
+        zooKeeper.getChildren("/assign", assgignWather, watchAssignCallBack, null);
     }
 
-    private Watcher assgignWather=new Watcher() {
+    private Watcher assgignWather = new Watcher() {
         @Override
         public void process(WatchedEvent watchedEvent) {
-          if(watchedEvent.getType()== Event.EventType.NodeChildrenChanged){
-              getWork();
-          }
+            if (watchedEvent.getType() == Event.EventType.NodeCreated) {
+                getWork();
+            }
+            watchAssign();
         }
     };
 
-    public void getWork(){
-
-
+    public void getWork() {
+        zooKeeper.getChildren("/assign", false, getWorkCallBack, null);
     }
-    private AsyncCallback.StatCallback watchAssignCallBack = new AsyncCallback.StatCallback() {
+
+    private AsyncCallback.ChildrenCallback getWorkCallBack = new AsyncCallback.ChildrenCallback() {
         @Override
-        public void processResult(int rc, String path, Object ctx, Stat stat) {
+        public void processResult(int rc, String path, Object ctx, List<String> list) {
+            if (!list.isEmpty()) {
+                for (String work : list) {
+                    if (work.contains(name)) {
+                        processWork(path + "/" + work);
+                    }
+                }
+            }
+
+        }
+    };
+
+    public void processWork(String workPath) {
+        log.info("{}正在处理任务，path:{}", name, workPath);
+        zooKeeper.getData(workPath, false, getWorkDataCallBack, workPath);
+    }
+
+    private AsyncCallback.DataCallback getWorkDataCallBack = new AsyncCallback.DataCallback() {
+        @Override
+        public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
+            try {
+                zooKeeper.delete(path, stat.getVersion());
+                zooKeeper.delete("/tasks/" + new String(data).split("-")[0], 0);
+            } catch (InterruptedException | KeeperException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+
+    private AsyncCallback.ChildrenCallback watchAssignCallBack = new AsyncCallback.ChildrenCallback() {
+        @Override
+        public void processResult(int rc, String path, Object ctx, List<String> children) {
             switch (KeeperException.Code.get(rc)) {
                 case CONNECTIONLOSS:
                     log.info("链接丢失重新监视");
@@ -102,6 +135,7 @@ public class Worker implements Watcher {
                     break;
                 case OK:
                     log.info("{}正在监控assign,等待任务分配", name);
+                    getWork();
                     break;
                 default:
                     log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
@@ -113,42 +147,7 @@ public class Worker implements Watcher {
 
     @Override
     public void process(WatchedEvent watchedEvent) {
-        String path = watchedEvent.getPath();
-        if ("/assign".equals(path)) {
-            watchAssign();
-        }
-        switch (watchedEvent.getType().getIntValue()) {
-            case -1:
-                log.info("");
-                break;
-            case 1:
-                log.info("{} NodeCreated", path);
-                break;
-            case 2:
-                log.info("{} NodeDeleted", path);
-                break;
-            case 3:
-                log.info("{} NodeDataChanged", path);
-                break;
-            case 4:
-                log.info("{} NodeChildrenChanged", path);
-                if (path.contains("/assign")) {
-                    log.info("任务到来了");
-                    try {
-                        List<String> tasksList = zooKeeper.getChildren("/assign", false);
-                        for (String tasks : tasksList) {
-                            if (tasks.contains(name)) {
-                                log.info("{}正在处理{}", name, tasks);
-                            }
-                        }
-                    } catch (KeeperException | InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                break;
-            default:
-                break;
-        }
+        log.info(watchedEvent.getType().toString());
     }
 
     public static void main(String[] args) throws InterruptedException {

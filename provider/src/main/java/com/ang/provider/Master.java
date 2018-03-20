@@ -6,7 +6,9 @@ import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
@@ -96,8 +98,6 @@ public class Master implements Watcher {
     };
 
     private void reassignAndSet(List<String> children) {
-        List<String> toProcess;
-
         if (workerCacheList == null || workerCacheList.isEmpty()) {
             try {
                 log.info("暂时没有worker");
@@ -110,8 +110,7 @@ public class Master implements Watcher {
             try {
                 List<String> taskList = zooKeeper.getChildren("/tasks", false);
                 for (String task : taskList) {
-                    int n = new Random().nextInt(workerCacheList.size()) - 1;
-                    zooKeeper.create("/assign/" + workerCacheList.get(n).replace("/workers", ""), task.getBytes(), OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
+                    checkAndAssign(task);
                 }
             } catch (KeeperException | InterruptedException e) {
                 e.printStackTrace();
@@ -229,10 +228,90 @@ public class Master implements Watcher {
         zooKeeper.getChildren("/tasks", new Watcher() {
             @Override
             public void process(WatchedEvent watchedEvent) {
-
+                if (watchedEvent.getType() == Event.EventType.NodeChildrenChanged) {
+                    zooKeeper.getChildren("/tasks", false, tasksChangeGetCallBack, null);
+                }
             }
         }, watchTasksCallBack, null);
     }
+
+    private AsyncCallback.ChildrenCallback tasksChangeGetCallBack = new AsyncCallback.ChildrenCallback() {
+
+        @Override
+        public void processResult(int rc, String path, Object ctx, List<String> list) {
+            for (String work : list) {
+                checkAndAssign(work);
+            }
+            watchTasks();
+        }
+    };
+
+    public void checkAndAssign(String work) {
+        Map<String, Object> map = new HashMap<>(0);
+        map.put("work", work);
+        while (workerCacheList.isEmpty()) {
+            getWorkers();
+            try {
+                Thread.sleep(6000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        String worker = workerCacheList.get(new Random().nextInt(workerCacheList.size()));
+        map.put("worker", worker);
+        zooKeeper.getData("/assign/" + worker, false, checkAndAssignDataCallBack, map);
+
+    }
+
+    private AsyncCallback.DataCallback checkAndAssignDataCallBack= new AsyncCallback.DataCallback() {
+            @Override
+            public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
+                Map<String, String> map = (Map<String, String>) ctx;
+                switch (KeeperException.Code.get(rc)) {
+                    case CONNECTIONLOSS:
+                        checkAndAssign(map.get("work"));
+                        break;
+                    case OK:
+                        break;
+                    case NONODE:
+                        assinWork(map);
+                        break;
+                    default:
+                        log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
+                        checkAndAssign((String) ctx);
+                        break;
+                }
+            }
+        };
+
+    public void assinWork(Map<String, String> map) {
+        zooKeeper.create("/assign/" + map.get("worker"), (map.get("work") + "-todo").getBytes(), OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL, assignWorkCallback, map);
+    }
+
+
+    /**
+     * 分配任务回调
+     **/
+    private AsyncCallback.StringCallback assignWorkCallback = new AsyncCallback.StringCallback() {
+        @Override
+        public void processResult(int rc, String path, Object ctx, String name) {
+            Map<String, String> map = (Map<String, String>) ctx;
+            switch (KeeperException.Code.get(rc)) {
+                case CONNECTIONLOSS:
+                    assinWork(map);
+                    break;
+                case OK:
+                    log.info("任务{}已分配给了{}", map.get("work"), map.get("worker"));
+                    break;
+                case NODEEXISTS:
+                    checkAndAssign(map.get("work"));
+                    break;
+                default:
+                    log.error("some thing went wrong:", KeeperException.create(KeeperException.Code.get(rc), path));
+                    createParent(path, ctx.toString().getBytes());
+            }
+        }
+    };
 
 
     private AsyncCallback.ChildrenCallback watchTasksCallBack = new AsyncCallback.ChildrenCallback() {
