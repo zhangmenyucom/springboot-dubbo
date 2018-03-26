@@ -19,33 +19,35 @@
 
 
     <bean id="messageWatcher" class="com.ang.provider.MessageWatcher" init-method="init">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="greyNode"/>
     </bean>
+    <bean id="messageUpdator" class="com.ang.provider.MessageUpdator">
+        <constructor-arg index="0" value="${zookeeper.address}"/>
+        <constructor-arg index="1" value="greyNode"/>
+    </bean>
+
+
     <bean id="worker1" class="com.ang.provider.Worker" init-method="register">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="worker1"/>
     </bean>
     <bean id="worker2" class="com.ang.provider.Worker" init-method="register">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="worker2"/>
     </bean>
     <bean id="master1" class="com.ang.provider.Master" init-method="runForMaster">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="master1"/>
     </bean>
     <bean id="master2" class="com.ang.provider.Master" init-method="runForMaster">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="master2"/>
     </bean>
 
     <bean id="tasksMaker" class="com.ang.provider.TasksMaker">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
+        <constructor-arg index="0" value="${zookeeper.address}"/>
         <constructor-arg index="1" value="tasksMaker"/>
     </bean>
 
-    <bean id="messageUpdator" class="com.ang.provider.MessageUpdator">
-        <constructor-arg index="0" value="111.231.140.42:2181,111.231.140.42:2182,111.231.140.42:2183"/>
-        <constructor-arg index="1" value="greyNode"/>
-    </bean>
 </beans>
