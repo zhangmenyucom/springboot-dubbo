@@ -114,7 +114,7 @@ public class Worker implements Watcher {
         public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
             try {
                 zooKeeper.delete(path, stat.getVersion());
-                zooKeeper.delete("/tasks/" + new String(data).split("-")[0], 0);
+                zooKeeper.delete("/tasks/" + new String(data).split("-")[0], -1);
                 log.info("{}处理完毕，path:{}", name, path);
             } catch (KeeperException.NoNodeException ignored) {
 
